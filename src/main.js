@@ -104,20 +104,46 @@ const bracketMathPlugin = ViewPlugin.fromClass(
       while ((match = bracketRegex.exec(text))) {
         const from = match.index
         const to = from + match[0].length
+        const inner = match[1]
 
-        // Cursor inside → show raw text, skip math AND sum
+        // Cursor inside → show raw text
         if (sel.from >= from && sel.to <= to) {
           lastConsumedIndex = to
           continue
         }
 
-        const base = evaluate(match[1])
+        // TOTAL handling (case-insensitive)
+        if (/^total$/i.test(inner.trim())) {
+          const finalTotal = totalSum
+
+          decos.push(
+            Decoration.replace({
+              widget: new class extends WidgetType {
+                toDOM() {
+                  const span = document.createElement("span")
+                  span.className = "cm-bracket-result"
+                  span.innerHTML = `
+                    <span class="cm-bracket">[</span>
+                    <span class="cm-bracket">${finalTotal}</span>
+                    <span class="cm-bracket">]</span>
+                  `
+                  return span
+                }
+              }
+            }).range(from, to)
+          )
+
+          lastConsumedIndex = to
+          totalSum = 0
+          continue
+        }
+
+        const base = evaluate(inner)
         if (typeof base !== "number") {
           lastConsumedIndex = to
           continue
         }
 
-        // Collect modifiers ONLY since last bracket
         const modifier = collectModifiers(text, lastConsumedIndex, from)
         const final = Math.ceil(base * (1 + modifier))
 
@@ -130,21 +156,20 @@ const bracketMathPlugin = ViewPlugin.fromClass(
               toDOM() {
                 const span = document.createElement("span")
                 span.className = "cm-bracket-result"
-                span.title =
-                  modifier !== 0
-                    ? `${base} × ${1 + modifier} = ${final}`
-                    : `${base}`
+                span.title = modifier !== 0
+                  ? `${base} × ${1 + modifier} = ${final}`
+                  : `${base}`
 
                 span.innerHTML = `
-              <span class="cm-bracket">[</span>
-              <span class="cm-result-base">${base}</span>
-              ${modifier !== 0
+                  <span class="cm-bracket">[</span>
+                  <span class="cm-result-base">${base}</span>
+                  ${modifier !== 0
                     ? `<span class="cm-result-arrow">→</span>
-                     <span class="cm-result-final">${final}</span>`
+                       <span class="cm-result-final">${final}</span>`
                     : ""
                   }
-              <span class="cm-bracket">]</span>
-            `
+                  <span class="cm-bracket">]</span>
+                `
                 return span
               }
             }
@@ -152,7 +177,6 @@ const bracketMathPlugin = ViewPlugin.fromClass(
         )
       }
 
-      // Store total for footer widget
       this.total = totalSum
 
       return Decoration.set(decos)
@@ -183,7 +207,7 @@ const resultTheme = EditorView.theme({
   },
 
   ".cm-bracket": {
-    color: "#6734ffff"
+    color: "#ffe634"
   },
 
   ".cm-matchingBracket>span": {
