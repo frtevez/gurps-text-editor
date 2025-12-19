@@ -119,6 +119,9 @@ const bracketMathPlugin = ViewPlugin.fromClass(
           decos.push(
             Decoration.replace({
               widget: new class extends WidgetType {
+                ignoreEvent() {
+                  return false
+                }
                 toDOM() {
                   const span = document.createElement("span")
                   span.className = "cm-bracket-result"
@@ -153,6 +156,9 @@ const bracketMathPlugin = ViewPlugin.fromClass(
         decos.push(
           Decoration.replace({
             widget: new class extends WidgetType {
+              ignoreEvent() {
+                return false
+              }
               toDOM() {
                 const span = document.createElement("span")
                 span.className = "cm-bracket-result"
@@ -286,27 +292,6 @@ const modifierHighlightPlugin = ViewPlugin.fromClass(
   { decorations: v => v.decorations }
 )
 
-const sumFooterPlugin = ViewPlugin.fromClass(
-  class {
-    constructor(view) {
-      this.dom = document.createElement("div")
-      this.dom.className = "cm-total-footer"
-      view.dom.appendChild(this.dom)
-      this.update(view)
-    }
-
-    update(view) {
-      const mathPlugin = view.plugin(bracketMathPlugin)
-      const total = mathPlugin?.total ?? 0
-      this.dom.textContent = `Total: ${total}`
-    }
-
-    destroy() {
-      this.dom.remove()
-    }
-  }
-)
-
 function collectModifiers(text, start, end) {
   const slice = text.slice(start, end)
   const regex = /([+-]\d+)/g
@@ -330,15 +315,14 @@ function collectModifiers(text, start, end) {
 let view = new EditorView({
   doc: "Cost: [10 + 5 * 2]",
   extensions: [
-  wrappingTheme,
-  minimalSetup,
-  markdown({ codeLanguages: languages }),
-  darkTheme,
-  resultTheme,
-  modifierHighlightPlugin,
-  bracketMathPlugin,
-  sumFooterPlugin,
-  columnTheme
-],
+    wrappingTheme,
+    minimalSetup,
+    markdown({ codeLanguages: languages }),
+    darkTheme,
+    resultTheme,
+    modifierHighlightPlugin,
+    bracketMathPlugin,
+    columnTheme
+  ],
   parent: document.body
 })
