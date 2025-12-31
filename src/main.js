@@ -148,7 +148,7 @@ const bracketMathPlugin = ViewPlugin.fromClass(
         }
 
         const modifier = collectModifiers(text, lastConsumedIndex, from)
-        const final = Math.ceil(base * (1 + modifier))
+        const final = Math.round(base * (1 + modifier))
 
         totalSum += final
         lastConsumedIndex = to
@@ -313,7 +313,7 @@ function collectModifiers(text, start, end) {
    ────────────────────────────── */
 
 let view = new EditorView({
-  doc: "Cost: [10 + 5 * 2]",
+  doc: "Advantage, Modifier +10 [10*5*2]",
   extensions: [
     wrappingTheme,
     minimalSetup,
